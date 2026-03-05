@@ -204,6 +204,47 @@ INSERT INTO base_warehouse (warehouse_code, warehouse_name, warehouse_type, addr
 ('WH001', '医疗废物暂存点', '暂存点', '医院地下室一层', 1000.00),
 ('WH002', '医疗废物贮存库', '贮存库', '医院后院', 5000.00);
 
+-- 容器表
+CREATE TABLE IF NOT EXISTS container (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    container_code VARCHAR(50) NOT NULL UNIQUE COMMENT '容器编号',
+    container_type VARCHAR(50) COMMENT '容器类型',
+    specification VARCHAR(50) COMMENT '规格',
+    capacity DECIMAL(10,2) COMMENT '容量(L)',
+    department_id BIGINT COMMENT '所属科室ID',
+    current_count INT DEFAULT 0 COMMENT '当前废物数量',
+    status TINYINT DEFAULT 1 COMMENT '状态(1:正常使用 2:已满 3:清洗中 4:报废)',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_container_code (container_code),
+    INDEX idx_department_id (department_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='容器表';
+
+-- 费用记录表
+CREATE TABLE IF NOT EXISTS biz_fee_record (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    fee_no VARCHAR(50) NOT NULL UNIQUE COMMENT '费用单号',
+    waste_id BIGINT COMMENT '废物记录ID',
+    disposal_org_id BIGINT COMMENT '处置机构',
+    weight DECIMAL(10,2) COMMENT '重量(kg)',
+    unit_price DECIMAL(10,4) COMMENT '单价(元/kg)',
+    total_amount DECIMAL(10,2) COMMENT '总金额(元)',
+    fee_type VARCHAR(20) COMMENT '费用类型(处置费/运输费)',
+    status TINYINT DEFAULT 1 COMMENT '状态(1:待结算 2:已结算 3:已支付)',
+    settlement_date DATETIME COMMENT '结算日期',
+    remark VARCHAR(500) COMMENT '备注',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_fee_no (fee_no),
+    INDEX idx_waste_id (waste_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='费用记录表';
+
 -- 插入默认处置机构
 INSERT INTO base_disposal_org (org_code, org_name, license_no, contact_person, phone, address) VALUES
 ('ORG001', 'XX医疗废物处置中心', 'DY-2024-001', '陈主任', '13800138001', 'XX市XX区XX路XX号');
+
+-- 插入默认容器
+INSERT INTO container (container_code, container_type, specification, capacity, department_id, status) VALUES
+('CON202603050001', '利器盒', '5L', 5.0, 1, 1),
+('CON202603050002', '塑料袋', '30L', 30.0, 1, 1),
+('CON202603050003', '周转桶', '50L', 50.0, 2, 1);

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.waste.mapper.FeeRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.hospital.waste.entity.FeeRecord">
+        <id column="id" property="id"/>
+        <result column="fee_no" property="feeNo"/>
+        <result column="waste_id" property="wasteId"/>
+        <result column="disposal_org_id" property="disposalOrgId"/>
+        <result column="weight" property="weight"/>
+        <result column="unit_price" property="unitPrice"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="fee_type" property="feeType"/>
+        <result column="status" property="status"/>
+        <result column="settlement_date" property="settlementDate"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM biz_fee_record ORDER BY id DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM biz_fee_record WHERE id = #{id}
+    </select>
+
+    <select id="selectByFeeNo" resultMap="BaseResultMap">
+        SELECT * FROM biz_fee_record WHERE fee_no = #{feeNo}
+    </select>
+
+    <select id="selectByWasteId" resultMap="BaseResultMap">
+        SELECT * FROM biz_fee_record WHERE waste_id = #{wasteId}
+    </select>
+
+    <select id="selectByDisposalOrgId" resultMap="BaseResultMap">
+        SELECT * FROM biz_fee_record WHERE disposal_org_id = #{disposalOrgId}
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM biz_fee_record WHERE status = #{status}
+    </select>
+
+    <insert id="insert" parameterType="com.hospital.waste.entity.FeeRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_fee_record (fee_no, waste_id, disposal_org_id, weight, unit_price, total_amount, fee_type, status, settlement_date, remark, create_time, update_time)
+        VALUES (#{feeNo}, #{wasteId}, #{disposalOrgId}, #{weight}, #{unitPrice}, #{totalAmount}, #{feeType}, #{status}, #{settlementDate}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="com.hospital.waste.entity.FeeRecord">
+        UPDATE biz_fee_record
+        SET fee_no = #{feeNo},
+            waste_id = #{wasteId},
+            disposal_org_id = #{disposalOrgId},
+            weight = #{weight},
+            unit_price = #{unitPrice},
+            total_amount = #{totalAmount},
+            fee_type = #{feeType},
+            status = #{status},
+            settlement_date = #{settlementDate},
+            remark = #{remark},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_fee_record WHERE id = #{id}
+    </delete>
+
+</mapper>
