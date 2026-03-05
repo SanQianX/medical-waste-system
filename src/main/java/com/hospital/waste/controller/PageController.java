@@ -56,6 +56,9 @@ public class PageController {
         pageTitles.put("disposal", "处置管理");
         contentTemplates.put("disposal", "disposal/list");
 
+        pageTitles.put("fee", "费用管理");
+        contentTemplates.put("fee", "fee/list");
+
         // 预警管理
         pageTitles.put("warning", "预警管理");
         contentTemplates.put("warning", "warning/list");
@@ -172,6 +175,15 @@ public class PageController {
     public String disposal(Model model) {
         setPageModel(model, "disposal");
         return "disposal/list";
+    }
+
+    /**
+     * 费用管理页面
+     */
+    @GetMapping("/page/fee")
+    public String fee(Model model) {
+        setPageModel(model, "fee");
+        return "fee/list";
     }
 
     /**
