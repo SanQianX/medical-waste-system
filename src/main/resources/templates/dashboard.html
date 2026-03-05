@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>首页仪表盘 - 医院废料管理系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -51,7 +52,7 @@
 </head>
 <body>
     <div class="header">
-        <div class="header-title">🏥 医院医院废料管理系统 - 首页仪表盘</div>
+        <div class="header-title">🏥 医院废料管理系统 - 首页仪表盘</div>
         <div class="header-user">
             <span>欢迎，管理员</span>
             <button class="btn btn-primary" onclick="location.href='/'">退出</button>
@@ -107,6 +108,15 @@
             <div class="section-title">预警提醒</div>
             <div id="warningList">
                 <div class="empty-tip">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="section">
+            <div class="section-title">数据统计图表</div>
+            <div class="grid-2">
+                <div id="trendChart" style="width: 100%; height: 300px;"></div>
+                <div id="categoryChart" style="width: 100%; height: 300px;"></div>
             </div>
         </div>
 
@@ -186,35 +196,31 @@
             try {
                 const authHeaders = getAuthHeaders();
 
-                // 加载废物记录统计
+                // 使用统计API获取日数据
+                const today = new Date().toISOString().split('T')[0];
+                const dailyRes = await fetch(`/api/v1/statistics/daily?date=${today}`, { headers: authHeaders });
+                const dailyData = await dailyRes.json();
+                if (dailyData.code === 200) {
+                    document.getElementById('todayCount').textContent = (dailyData.data.wasteCount || 0) + ' 条';
+                    document.getElementById('pendingTransfer').textContent = dailyData.data.transferCount || 0;
+                }
+
+                // 使用统计API获取月数据
+                const currentMonth = today.substring(0, 7);
+                const monthlyRes = await fetch(`/api/v1/statistics/monthly?yearMonth=${currentMonth}`, { headers: authHeaders });
+                const monthlyData = await monthlyRes.json();
+                if (monthlyData.code === 200) {
+                    document.getElementById('disposedThisMonth').textContent = (monthlyData.data.disposalCount || 0) + ' 条';
+                }
+
+                // 加载废物记录详情
                 const wasteRes = await fetch('/api/v1/waste/list', { headers: authHeaders });
                 const wasteData = await wasteRes.json();
                 if (wasteData.code === 200) {
                     const records = wasteData.data || [];
-                    let todayWeight = 0;
-                    let inStorageCount = 0;
-                    let disposedWeight = 0;
-                    const today = new Date().toISOString().split('T')[0];
-                    const currentMonth = today.substring(0, 7);
-
-                    records.forEach(r => {
-                        const genDate = r.generateTime ? r.generateTime.split('T')[0] : '';
-                        const disposeDate = r.disposalTime ? r.disposalTime.split('T')[0] : '';
-
-                        if (genDate === today) {
-                            todayWeight += parseFloat(r.weight || 0);
-                        }
-                        if (r.status === 3) { // 贮存中
-                            inStorageCount++;
-                        }
-                        if (disposeDate.substring(0, 7) === currentMonth && r.status === 4) {
-                            disposedWeight += parseFloat(r.weight || 0);
-                        }
-                    });
-
-                    document.getElementById('todayCount').textContent = todayWeight.toFixed(2) + ' kg';
+                    // 库存中数量
+                    const inStorageCount = records.filter(r => r.status === 3).length;
                     document.getElementById('inStorage').textContent = inStorageCount;
-                    document.getElementById('disposedThisMonth').textContent = disposedWeight.toFixed(2) + ' kg';
 
                     // 显示最新5条记录
                     const latest = records.slice(0, 5);
@@ -238,8 +244,6 @@
                 const transferData = await transferRes.json();
                 if (transferData.code === 200) {
                     const transfers = (transferData.data || []).slice(0, 5);
-                    const pendingCount = transferData.data ? transferData.data.filter(t => t.status === 1).length : 0;
-                    document.getElementById('pendingTransfer').textContent = pendingCount;
 
                     const tbody = document.getElementById('transferList');
                     if (transfers.length > 0) {
@@ -257,8 +261,101 @@
 
                 // 加载预警数据
                 loadWarnings();
+
+                // 加载图表数据
+                loadCharts();
             } catch (e) {
                 console.error('加载数据失败:', e);
+            }
+        }
+
+        // 加载图表数据
+        async function loadCharts() {
+            try {
+                const authHeaders = getAuthHeaders();
+
+                // 加载类别数据用于饼图
+                const categoryRes = await fetch('/api/v1/waste-category/list', { headers: authHeaders });
+                const categoryData = await categoryRes.json();
+
+                // 加载废物记录用于统计
+                const wasteRes = await fetch('/api/v1/waste/list', { headers: authHeaders });
+                const wasteData = await wasteRes.json();
+
+                // 初始化趋势图
+                const trendChart = echarts.init(document.getElementById('trendChart'));
+                const dates = [];
+                const wasteCounts = [];
+                const transferCounts = [];
+                const disposalCounts = [];
+
+                // 生成最近7天的数据
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    const dateStr = date.toISOString().split('T')[0];
+                    dates.push(dateStr.substring(5));
+
+                    // 统计当天数据
+                    if (wasteData.code === 200) {
+                        const dayWaste = wasteData.data.filter(r =>
+                            r.generateTime && r.generateTime.startsWith(dateStr)).length;
+                        wasteCounts.push(dayWaste);
+                    }
+                }
+
+                trendChart.setOption({
+                    title: { text: '近7天废物产生趋势', left: 'center' },
+                    tooltip: { trigger: 'axis' },
+                    legend: { data: ['产生数'], bottom: 0 },
+                    xAxis: { type: 'category', data: dates },
+                    yAxis: { type: 'value' },
+                    series: [{
+                        name: '产生数',
+                        type: 'line',
+                        data: wasteCounts,
+                        smooth: true,
+                        itemStyle: { color: '#3498db' },
+                        areaStyle: { color: 'rgba(52, 152, 219, 0.2)' }
+                    }]
+                });
+
+                // 初始化类别饼图
+                const categoryChart = echarts.init(document.getElementById('categoryChart'));
+                const categoryNames = [];
+                const categoryDataList = [];
+
+                if (categoryData.code === 200 && categoryData.data) {
+                    categoryData.data.forEach(c => {
+                        categoryNames.push(c.categoryName);
+                        // 统计每个类别的废物数量
+                        const count = wasteData.data ?
+                            wasteData.data.filter(r => r.categoryId === c.id).length : 0;
+                        categoryDataList.push({ value: count, name: c.categoryName });
+                    });
+                }
+
+                categoryChart.setOption({
+                    title: { text: '废物类别分布', left: 'center' },
+                    tooltip: { trigger: 'item' },
+                    legend: { bottom: 0 },
+                    series: [{
+                        name: '类别',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        data: categoryDataList.length > 0 ? categoryDataList : [
+                            { value: 0, name: '暂无数据' }
+                        ]
+                    }]
+                });
+
+                // 窗口大小变化时重新调整图表
+                window.addEventListener('resize', function() {
+                    trendChart.resize();
+                    categoryChart.resize();
+                });
+            } catch (e) {
+                console.error('加载图表失败:', e);
             }
         }
 
