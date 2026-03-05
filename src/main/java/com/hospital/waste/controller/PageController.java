@@ -56,6 +56,10 @@ public class PageController {
         // 预警管理
         pageTitles.put("warning", "预警管理");
         contentTemplates.put("warning", "warning/list");
+
+        // 数据统计
+        pageTitles.put("statistics", "数据统计");
+        contentTemplates.put("statistics", "statistics");
     }
 
     private void setPageModel(Model model, String page) {
@@ -165,6 +169,15 @@ public class PageController {
     public String warning(Model model) {
         setPageModel(model, "warning");
         return "warning/list";
+    }
+
+    /**
+     * 数据统计页面
+     */
+    @GetMapping("/page/statistics")
+    public String statistics(Model model) {
+        setPageModel(model, "statistics");
+        return "statistics";
     }
 
     /**
