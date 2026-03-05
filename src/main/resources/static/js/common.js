@@ -80,9 +80,15 @@ const App = {
     request: function(url, options) {
         const loading = this.showLoading();
 
+        // 获取token
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+
         return fetch(url, {
             headers: {
                 'Content-Type': 'application/json',
+                'X-Token': token || '',
+                'X-User-Id': userId || '',
                 ...options.headers
             },
             ...options
