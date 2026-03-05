@@ -1,6 +1,8 @@
 package com.hospital.waste.controller;
 
+import com.hospital.waste.entity.SysWarning;
 import com.hospital.waste.mapper.DisposalRecordMapper;
+import com.hospital.waste.mapper.SysWarningMapper;
 import com.hospital.waste.mapper.TransferRecordMapper;
 import com.hospital.waste.mapper.WasteRecordMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +34,9 @@ public class StatisticsController {
 
     @Autowired
     private DisposalRecordMapper disposalRecordMapper;
+
+    @Autowired
+    private SysWarningMapper sysWarningMapper;
 
     @Operation(summary = "日报表统计")
     @GetMapping("/daily")
@@ -174,6 +179,70 @@ public class StatisticsController {
         result.put("endDate", endTime.toLocalDate().toString());
         Map<String, Object> data = new HashMap<>();
         data.put("wasteCount", wasteCount);
+        result.put("data", data);
+
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "仪表盘汇总数据")
+    @GetMapping("/dashboard")
+    public ResponseEntity<Map<String, Object>> getDashboardSummary() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime todayStart = now.toLocalDate().atStartOfDay();
+        LocalDateTime monthStart = now.withDayOfMonth(1).toLocalDate().atStartOfDay();
+
+        Map<String, Object> result = new HashMap<>();
+
+        // 今日数据
+        int todayWaste = wasteRecordMapper.countByDateRange(todayStart, now);
+        int todayTransfer = transferRecordMapper.countByDateRange(todayStart, now);
+        int todayDisposal = disposalRecordMapper.countByDateRange(todayStart, now);
+
+        // 本月数据
+        int monthWaste = wasteRecordMapper.countByDateRange(monthStart, now);
+        int monthTransfer = transferRecordMapper.countByDateRange(monthStart, now);
+        int monthDisposal = disposalRecordMapper.countByDateRange(monthStart, now);
+
+        // 预警统计
+        List<SysWarning> allWarnings = sysWarningMapper.selectAll();
+        int totalWarnings = allWarnings.size();
+        int unprocessedWarnings = (int) allWarnings.stream()
+            .filter(w -> w.getStatus() == null || w.getStatus() == 0).count();
+        int highLevelWarnings = (int) allWarnings.stream()
+            .filter(w -> w.getWarningLevel() != null && w.getWarningLevel() >= 3).count();
+
+        // 总计数据
+        int totalWaste = wasteRecordMapper.selectAll().size();
+        int totalTransfer = transferRecordMapper.selectAll().size();
+        int totalDisposal = disposalRecordMapper.selectAll().size();
+
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> today = new HashMap<>();
+        today.put("wasteCount", todayWaste);
+        today.put("transferCount", todayTransfer);
+        today.put("disposalCount", todayDisposal);
+
+        Map<String, Object> month = new HashMap<>();
+        month.put("wasteCount", monthWaste);
+        month.put("transferCount", monthTransfer);
+        month.put("disposalCount", monthDisposal);
+
+        Map<String, Object> totals = new HashMap<>();
+        totals.put("wasteCount", totalWaste);
+        totals.put("transferCount", totalTransfer);
+        totals.put("disposalCount", totalDisposal);
+
+        Map<String, Object> warnings = new HashMap<>();
+        warnings.put("total", totalWarnings);
+        warnings.put("unprocessed", unprocessedWarnings);
+        warnings.put("highLevel", highLevelWarnings);
+
+        data.put("today", today);
+        data.put("month", month);
+        data.put("totals", totals);
+        data.put("warnings", warnings);
+
+        result.put("code", 200);
         result.put("data", data);
 
         return ResponseEntity.ok(result);
