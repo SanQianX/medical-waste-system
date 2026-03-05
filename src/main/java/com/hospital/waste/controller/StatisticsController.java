@@ -1,6 +1,7 @@
 package com.hospital.waste.controller;
 
 import com.hospital.waste.entity.SysWarning;
+import com.hospital.waste.entity.WasteRecord;
 import com.hospital.waste.mapper.DisposalRecordMapper;
 import com.hospital.waste.mapper.SysWarningMapper;
 import com.hospital.waste.mapper.TransferRecordMapper;
@@ -246,5 +247,118 @@ public class StatisticsController {
         result.put("data", data);
 
         return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "导出日报表CSV", description = "导出日报表数据为CSV格式")
+    @GetMapping("/export/daily")
+    public ResponseEntity<String> exportDailyCsv(
+            @RequestParam(required = false) String date) {
+
+        LocalDate targetDate;
+        if (date == null || date.isEmpty()) {
+            targetDate = LocalDate.now();
+        } else {
+            targetDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
+        }
+
+        LocalDateTime startTime = targetDate.atStartOfDay();
+        LocalDateTime endTime = targetDate.atTime(23, 59, 59);
+
+        // 获取数据
+        List<WasteRecord> wasteRecords = wasteRecordMapper.selectAll();
+        List<WasteRecord> dayRecords = wasteRecords.stream()
+            .filter(r -> r.getGenerateTime() != null &&
+                !r.getGenerateTime().isBefore(startTime) &&
+                !r.getGenerateTime().isAfter(endTime))
+            .collect(java.util.stream.Collectors.toList());
+
+        // 构建CSV内容
+        StringBuilder csv = new StringBuilder();
+        csv.append("日期,废物编码,科室ID,类别ID,重量,容器数,状态,产生时间\n");
+
+        for (WasteRecord record : dayRecords) {
+            csv.append(targetDate).append(",");
+            csv.append(record.getWasteCode()).append(",");
+            csv.append(record.getDepartmentId()).append(",");
+            csv.append(record.getCategoryId()).append(",");
+            csv.append(record.getWeight()).append(",");
+            csv.append(record.getContainerCount()).append(",");
+            csv.append(getStatusText(record.getStatus())).append(",");
+            csv.append(record.getGenerateTime()).append("\n");
+        }
+
+        return ResponseEntity.ok()
+            .header("Content-Type", "text/csv;charset=UTF-8")
+            .header("Content-Disposition", "attachment; filename=daily_report_" + date + ".csv")
+            .body(csv.toString());
+    }
+
+    @Operation(summary = "导出预警报表CSV", description = "导出预警数据为CSV格式")
+    @GetMapping("/export/warnings")
+    public ResponseEntity<String> exportWarningsCsv(
+            @RequestParam(required = false) Integer status) {
+
+        List<SysWarning> warnings;
+        if (status != null) {
+            warnings = sysWarningMapper.selectByStatus(status);
+        } else {
+            warnings = sysWarningMapper.selectAll();
+        }
+
+        // 构建CSV内容
+        StringBuilder csv = new StringBuilder();
+        csv.append("预警ID,预警类型,预警级别,预警信息,状态,创建时间,处理时间\n");
+
+        for (SysWarning warning : warnings) {
+            csv.append(warning.getId()).append(",");
+            csv.append(getWarningTypeText(warning.getWarningType())).append(",");
+            csv.append(getWarningLevelText(warning.getWarningLevel())).append(",");
+            csv.append("\"").append(warning.getWarningMsg().replace("\"", "\"\"")).append("\",");
+            csv.append(getWarningStatusText(warning.getStatus())).append(",");
+            csv.append(warning.getCreateTime()).append(",");
+            csv.append(warning.getHandleTime() != null ? warning.getHandleTime() : "").append("\n");
+        }
+
+        return ResponseEntity.ok()
+            .header("Content-Type", "text/csv;charset=UTF-8")
+            .header("Content-Disposition", "attachment; filename=warnings_report.csv")
+            .body(csv.toString());
+    }
+
+    // 辅助方法
+    private String getStatusText(Integer status) {
+        if (status == null) return "未知";
+        switch (status) {
+            case 1: return "待收集";
+            case 2: return "已收集";
+            case 3: return "转运中";
+            case 4: return "已处置";
+            default: return "未知";
+        }
+    }
+
+    private String getWarningTypeText(String type) {
+        if (type == null) return "未知";
+        switch (type) {
+            case "EXPIRE": return "超时预警";
+            case "OVERFLOW": return "超量预警";
+            case "EXCEPTION": return "异常预警";
+            default: return type;
+        }
+    }
+
+    private String getWarningLevelText(Integer level) {
+        if (level == null) return "未知";
+        switch (level) {
+            case 1: return "低";
+            case 2: return "中";
+            case 3: return "高";
+            default: return "未知";
+        }
+    }
+
+    private String getWarningStatusText(Integer status) {
+        if (status == null || status == 0) return "未处理";
+        return "已处理";
     }
 }
