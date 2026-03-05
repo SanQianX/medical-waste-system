@@ -13,6 +13,9 @@ FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/openjdk:11-jdk-slim
 
 WORKDIR /app
 
+# 安装wget用于健康检查
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
 # 复制构建产物
 COPY --from=builder /app/target/*.jar app.jar
 

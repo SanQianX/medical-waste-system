@@ -46,6 +46,10 @@
         SELECT * FROM sys_warning WHERE status = 0 ORDER BY warning_level DESC, create_time DESC
     </select>
 
+    <select id="selectByWasteIdAndType" resultMap="BaseResultMap">
+        SELECT * FROM sys_warning WHERE waste_id = #{wasteId} AND warning_type = #{warningType}
+    </select>
+
     <insert id="insert" parameterType="com.hospital.waste.entity.SysWarning" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO sys_warning (warning_type, waste_id, warehouse_id, warning_msg, warning_level, status, create_time)
         VALUES (#{warningType}, #{wasteId}, #{warehouseId}, #{warningMsg}, #{warningLevel}, #{status}, NOW())

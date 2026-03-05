@@ -60,4 +60,9 @@ public interface SysWarningMapper {
      * 查询未处理的预警
      */
     List<SysWarning> selectUnprocessed();
+
+    /**
+     * 根据废物ID和预警类型查询
+     */
+    List<SysWarning> selectByWasteIdAndType(@Param("wasteId") Long wasteId, @Param("warningType") String warningType);
 }
