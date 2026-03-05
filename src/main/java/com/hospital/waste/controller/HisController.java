@@ -68,7 +68,7 @@ public class HisController {
         // 简单分页
         int start = (page - 1) * pageSize;
         int end = Math.min(start + pageSize, records.size());
-        List<WasteRecord> pageData = start < records.size() ? records.subList(start, end) : List.of();
+        List<WasteRecord> pageData = start < records.size() ? records.subList(start, end) : new java.util.ArrayList<>();
 
         result.put("code", 200);
         result.put("data", pageData);
@@ -208,8 +208,8 @@ public class HisController {
         String deptCode = "D001"; // 默认科室编码
         if (record.getDepartmentId() != null) {
             Department dept = departmentMapper.selectById(record.getDepartmentId());
-            if (dept != null && dept.getCode() != null) {
-                deptCode = dept.getCode();
+            if (dept != null && dept.getDeptCode() != null) {
+                deptCode = dept.getDeptCode();
             }
         }
         // 生成4位流水号

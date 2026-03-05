@@ -118,4 +118,54 @@ public class WasteRecordController {
         result.put("message", success ? "状态更新成功" : "状态更新失败");
         return ResponseEntity.ok(result);
     }
+
+    @Operation(summary = "生成追溯码标签", description = "获取废物追溯码标签信息用于打印")
+    @GetMapping("/{id}/label")
+    public ResponseEntity<Map<String, Object>> getLabelInfo(@PathVariable Long id) {
+        WasteRecord record = wasteRecordService.findById(id);
+        Map<String, Object> result = new HashMap<>();
+        if (record == null) {
+            result.put("code", 404);
+            result.put("message", "记录不存在");
+            return ResponseEntity.ok(result);
+        }
+
+        // 构建标签信息
+        Map<String, Object> labelData = new HashMap<>();
+        labelData.put("wasteCode", record.getWasteCode());
+        labelData.put("weight", record.getWeight());
+        labelData.put("generateTime", record.getGenerateTime());
+        labelData.put("categoryId", record.getCategoryId());
+        labelData.put("departmentId", record.getDepartmentId());
+        // 条形码数据（可用于生成条形码）
+        labelData.put("barcodeData", record.getWasteCode());
+
+        result.put("code", 200);
+        result.put("data", labelData);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "扫码确认交接", description = "通过扫描追溯码确认废物交接")
+    @PostMapping("/scan/confirm")
+    public ResponseEntity<Map<String, Object>> scanConfirm(@RequestBody Map<String, Object> scanData) {
+        String wasteCode = (String) scanData.get("wasteCode");
+        Long operatorId = scanData.get("operatorId") != null ? Long.valueOf(scanData.get("operatorId").toString()) : null;
+        Integer targetStatus = scanData.get("targetStatus") != null ? Integer.valueOf(scanData.get("targetStatus").toString()) : 2;
+
+        WasteRecord record = wasteRecordService.findByWasteCode(wasteCode);
+        Map<String, Object> result = new HashMap<>();
+        if (record == null) {
+            result.put("code", 404);
+            result.put("message", "未找到该追溯码对应的废物记录");
+            return ResponseEntity.ok(result);
+        }
+
+        // 更新状态
+        boolean success = wasteRecordService.updateStatus(record.getId(), targetStatus);
+
+        result.put("code", success ? 200 : 500);
+        result.put("message", success ? "交接确认成功" : "交接确认失败");
+        result.put("data", record);
+        return ResponseEntity.ok(result);
+    }
 }
