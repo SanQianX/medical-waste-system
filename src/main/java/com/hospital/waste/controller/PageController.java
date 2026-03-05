@@ -34,6 +34,9 @@ public class PageController {
         pageTitles.put("warehouse", "仓库管理");
         contentTemplates.put("warehouse", "warehouse/list");
 
+        pageTitles.put("container", "容器管理");
+        contentTemplates.put("container", "container/list");
+
         pageTitles.put("disposal-org", "处置机构管理");
         contentTemplates.put("disposal-org", "disposal-org/list");
 
@@ -104,6 +107,15 @@ public class PageController {
     public String warehouse(Model model) {
         setPageModel(model, "warehouse");
         return "warehouse/list";
+    }
+
+    /**
+     * 容器管理页面
+     */
+    @GetMapping("/page/container")
+    public String container(Model model) {
+        setPageModel(model, "container");
+        return "container/list";
     }
 
     /**

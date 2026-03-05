@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>容器管理 - 医院废物管理系统</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; }
+        .header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .header-title { font-size: 20px; font-weight: 600; color: #2c3e50; }
+        .header-user { display: flex; align-items: center; gap: 15px; }
+        .btn { padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-success { background: #2ecc71; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .container { padding: 30px; max-width: 1400px; margin: 0 auto; }
+        .section { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-bar { display: flex; gap: 10px; flex: 1; }
+        .search-bar input, .search-bar select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { background: #f8f9fa; padding: 12px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #eee; }
+        .table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .table tr:hover { background: #f8f9fa; }
+        .status-tag { display: inline-block; padding: 4px 10px; border-radius: 3px; font-size: 12px; }
+        .status-1 { background: #d4edda; color: #155724; }
+        .status-2 { background: #fff3cd; color: #856404; }
+        .status-3 { background: #cce5ff; color: #004085; }
+        .status-4 { background: #f8d7da; color: #721c24; }
+        .action-btns { display: flex; gap: 5px; }
+        .action-btns button { padding: 5px 10px; font-size: 12px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 500px; max-width: 90%; }
+        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">医院废物管理系统 - 容器管理</div>
+        <div class="header-user">
+            <a href="/page/dashboard" class="btn btn-primary">返回首页</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <div class="section-title">容器列表</div>
+            <div class="toolbar">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="搜索容器编号...">
+                    <select id="statusFilter">
+                        <option value="">全部状态</option>
+                        <option value="1">正常使用</option>
+                        <option value="2">已满</option>
+                        <option value="3">清洗中</option>
+                        <option value="4">报废</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadContainers()">搜索</button>
+                </div>
+                <button class="btn btn-success" onclick="showAddModal()">+ 添加容器</button>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>容器编号</th>
+                        <th>容器类型</th>
+                        <th>规格</th>
+                        <th>容量(L)</th>
+                        <th>当前废物数</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="containerTable">
+                    <tr><td colspan="9" style="text-align:center;">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 添加/编辑弹窗 -->
+    <div class="modal" id="containerModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">添加容器</div>
+            <form id="containerForm">
+                <input type="hidden" id="containerId">
+                <div class="form-group">
+                    <label>容器编号 *</label>
+                    <input type="text" id="containerCode" required>
+                </div>
+                <div class="form-group">
+                    <label>容器类型</label>
+                    <input type="text" id="containerType">
+                </div>
+                <div class="form-group">
+                    <label>规格</label>
+                    <input type="text" id="specification">
+                </div>
+                <div class="form-group">
+                    <label>容量(L)</label>
+                    <input type="number" id="capacity">
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="containerStatus">
+                        <option value="1">正常使用</option>
+                        <option value="2">已满</option>
+                        <option value="3">清洗中</option>
+                        <option value="4">报废</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-primary" onclick="hideModal()">取消</button>
+                    <button type="submit" class="btn btn-success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const authHeaders = {
+            'X-Token': localStorage.getItem('token') || '',
+            'X-User-Id': localStorage.getItem('userId') || ''
+        };
+
+        async function loadContainers() {
+            try {
+                const res = await fetch('/api/v1/container/list', { headers: authHeaders });
+                const data = await res.json();
+                if (data.code === 200) {
+                    renderTable(data.data);
+                }
+            } catch (e) {
+                console.error('加载失败:', e);
+            }
+        }
+
+        function renderTable(containers) {
+            const tbody = document.getElementById('containerTable');
+            if (!containers || containers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = containers.map(c => `
+                <tr>
+                    <td>${c.id}</td>
+                    <td>${c.containerCode}</td>
+                    <td>${c.containerType || '-'}</td>
+                    <td>${c.specification || '-'}</td>
+                    <td>${c.capacity || '-'}</td>
+                    <td>${c.currentCount || 0}</td>
+                    <td><span class="status-tag status-${c.status || 1}">${getStatusText(c.status)}</span></td>
+                    <td>${c.createTime ? c.createTime.substring(0,10) : '-'}</td>
+                    <td class="action-btns">
+                        <button class="btn btn-primary" onclick="editContainer(${c.id})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteContainer(${c.id})">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusText(status) {
+            const texts = {1: '正常使用', 2: '已满', 3: '清洗中', 4: '报废'};
+            return texts[status] || '未知';
+        }
+
+        function showAddModal() {
+            document.getElementById('modalTitle').textContent = '添加容器';
+            document.getElementById('containerForm').reset();
+            document.getElementById('containerId').value = '';
+            document.getElementById('containerModal').classList.add('active');
+        }
+
+        function hideModal() {
+            document.getElementById('containerModal').classList.remove('active');
+        }
+
+        async function editContainer(id) {
+            try {
+                const res = await fetch(`/api/v1/container/${id}`, { headers: authHeaders });
+                const data = await res.json();
+                if (data.code === 200) {
+                    const c = data.data;
+                    document.getElementById('modalTitle').textContent = '编辑容器';
+                    document.getElementById('containerId').value = c.id;
+                    document.getElementById('containerCode').value = c.containerCode;
+                    document.getElementById('containerType').value = c.containerType || '';
+                    document.getElementById('specification').value = c.specification || '';
+                    document.getElementById('capacity').value = c.capacity || '';
+                    document.getElementById('containerStatus').value = c.status || 1;
+                    document.getElementById('containerModal').classList.add('active');
+                }
+            } catch (e) {
+                console.error('获取失败:', e);
+            }
+        }
+
+        async function deleteContainer(id) {
+            if (!confirm('确定删除该容器?')) return;
+            try {
+                const res = await fetch(`/api/v1/container/${id}`, {
+                    method: 'DELETE',
+                    headers: authHeaders
+                });
+                const data = await res.json();
+                if (data.code === 200) {
+                    alert('删除成功');
+                    loadContainers();
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            } catch (e) {
+                console.error('删除失败:', e);
+            }
+        }
+
+        document.getElementById('containerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('containerId').value;
+            const container = {
+                containerCode: document.getElementById('containerCode').value,
+                containerType: document.getElementById('containerType').value,
+                specification: document.getElementById('specification').value,
+                capacity: parseFloat(document.getElementById('capacity').value) || 0,
+                status: parseInt(document.getElementById('containerStatus').value)
+            };
+
+            try {
+                const url = id ? `/api/v1/container/${id}` : '/api/v1/container';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { ...authHeaders, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(container)
+                });
+                const data = await res.json();
+                if (data.code === 200) {
+                    alert('保存成功');
+                    hideModal();
+                    loadContainers();
+                } else {
+                    alert('保存失败: ' + data.message);
+                }
+            } catch (e) {
+                console.error('保存失败:', e);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadContainers);
+    </script>
+</body>
+</html>
