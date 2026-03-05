@@ -1,0 +1,15 @@
+# 开发模式Dockerfile - 支持热加载
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/maven:3.9.9-eclipse-temurin-8-noble-linuxarm64 AS builder
+
+WORKDIR /app
+
+# 复制pom.xml并下载依赖
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# 复制源代码
+COPY src ./src
+
+# 运行开发模式（启用热加载）
+# 使用spring-boot-maven-plugin的run目标，修改代码会自动重启
+CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.fork=false", "-DskipTests"]

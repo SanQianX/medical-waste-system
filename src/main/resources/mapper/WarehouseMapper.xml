@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.waste.mapper.WarehouseMapper">
+
+    <resultMap id="BaseResultMap" type="com.hospital.waste.entity.Warehouse">
+        <id column="id" property="id"/>
+        <result column="warehouse_code" property="warehouseCode"/>
+        <result column="warehouse_name" property="warehouseName"/>
+        <result column="warehouse_type" property="warehouseType"/>
+        <result column="address" property="address"/>
+        <result column="capacity" property="capacity"/>
+        <result column="manager" property="manager"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM base_warehouse ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM base_warehouse WHERE id = #{id}
+    </select>
+
+    <select id="selectByWarehouseCode" resultMap="BaseResultMap">
+        SELECT * FROM base_warehouse WHERE warehouse_code = #{warehouseCode}
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM base_warehouse WHERE status = #{status}
+    </select>
+
+    <insert id="insert" parameterType="com.hospital.waste.entity.Warehouse" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO base_warehouse (warehouse_code, warehouse_name, warehouse_type, address,
+                                    capacity, manager, status, create_time)
+        VALUES (#{warehouseCode}, #{warehouseName}, #{warehouseType}, #{address},
+                #{capacity}, #{manager}, #{status}, NOW())
+    </insert>
+
+    <update id="update" parameterType="com.hospital.waste.entity.Warehouse">
+        UPDATE base_warehouse
+        <set>
+            <if test="warehouseCode != null">warehouse_code = #{warehouseCode},</if>
+            <if test="warehouseName != null">warehouse_name = #{warehouseName},</if>
+            <if test="warehouseType != null">warehouse_type = #{warehouseType},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="capacity != null">capacity = #{capacity},</if>
+            <if test="manager != null">manager = #{manager},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM base_warehouse WHERE id = #{id}
+    </delete>
+
+</mapper>

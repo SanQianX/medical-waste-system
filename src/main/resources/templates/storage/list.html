@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贮存管理 - 医院废料管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="page-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="logo">
+                <h2>医院废料管理系统</h2>
+            </div>
+
+            <div class="menu-group">概览</div>
+            <a href="/page/dashboard" class="menu-item">
+                <span class="icon">📊</span> 首页仪表盘
+            </a>
+
+            <div class="menu-group">基础数据</div>
+            <a href="/page/department" class="menu-item">
+                <span class="icon">🏥</span> 科室管理
+            </a>
+            <a href="/page/waste-category" class="menu-item">
+                <span class="icon">🗑️</span> 废物类别管理
+            </a>
+            <a href="/page/warehouse" class="menu-item">
+                <span class="icon">🏭</span> 仓库管理
+            </a>
+            <a href="/page/disposal-org" class="menu-item">
+                <span class="icon">🏢</span> 处置机构管理
+            </a>
+
+            <div class="menu-group">业务管理</div>
+            <a href="/page/waste-record" class="menu-item">
+                <span class="icon">📝</span> 废物产生记录
+            </a>
+            <a href="/page/transfer" class="menu-item">
+                <span class="icon">🚚</span> 转运管理
+            </a>
+            <a href="/page/storage" class="menu-item active">
+                <span class="icon">📦</span> 贮存管理
+            </a>
+            <a href="/page/disposal" class="menu-item">
+                <span class="icon">🔥</span> 处置管理
+            </a>
+            <a href="/page/warning" class="menu-item">
+                <span class="icon">⚠️</span> 预警管理
+            </a>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <div class="header-title">贮存管理</div>
+                <div class="header-user">
+                    <span>欢迎，管理员</span>
+                    <a href="/" class="btn btn-primary btn-sm">退出</a>
+                </div>
+            </div>
+
+            <div class="content">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">贮存中</div>
+            <div class="value" id="stat-1">0</div>
+        </div>
+        <div class="stat-card success">
+            <div class="label">已出库</div>
+            <div class="value" id="stat-2">0</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">贮存记录列表</h3>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>废物编码</th>
+                    <th>仓库</th>
+                    <th>入库时间</th>
+                    <th>出库时间</th>
+                    <th>存储天数</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let currentData = [];
+        let warehouses = [];
+        let wasteRecords = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOptions();
+            loadData();
+        });
+
+        async function loadOptions() {
+            try {
+                const [whRes, wasteRes] = await Promise.all([
+                    fetch('/api/v1/warehouse/list'),
+                    fetch('/api/v1/waste/list')
+                ]);
+                const whResult = await whRes.json();
+                const wasteResult = await wasteRes.json();
+
+                warehouses = whResult.data || [];
+                wasteRecords = wasteResult.data || [];
+            } catch (error) {
+                console.error('加载选项失败:', error);
+            }
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch('/api/v1/storage/list');
+                const result = await response.json();
+                if (result.code === 200) {
+                    currentData = result.data || [];
+                    updateStats();
+                    renderTable(currentData);
+                }
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+
+        function updateStats() {
+            const stats = {1: 0, 2: 0};
+            currentData.forEach(item => {
+                if (stats[item.status] !== undefined) stats[item.status]++;
+            });
+            document.getElementById('stat-1').innerText = stats[1];
+            document.getElementById('stat-2').innerText = stats[2];
+        }
+
+        function getStatusText(status) {
+            return status === 1 ? '贮存中' : '已出库';
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(item => {
+                const waste = wasteRecords.find(w => w.id === item.wasteId);
+                const warehouse = warehouses.find(w => w.id === item.warehouseId);
+                const inTime = item.inTime ? new Date(item.inTime).toLocaleString() : '';
+                const outTime = item.outTime ? new Date(item.outTime).toLocaleString() : '';
+                return `
+                    <tr>
+                        <td>${item.id || ''}</td>
+                        <td>${waste ? waste.wasteCode : ''}</td>
+                        <td>${warehouse ? warehouse.warehouseName : ''}</td>
+                        <td>${inTime}</td>
+                        <td>${outTime}</td>
+                        <td>${item.storageDays || ''}</td>
+                        <td><span class="status-tag status-${item.status}">${getStatusText(item.status)}</span></td>
+                        <td>
+                            ${item.status === 1 ? `<button class="btn btn-success" onclick="outStorage(${item.id})">出库</button>` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function outStorage(id) {
+            if (!confirm('确定要出库吗？')) return;
+
+            try {
+                const response = await fetch(`/api/v1/storage/${id}/out`, {
+                    method: 'PUT'
+                });
+                const result = await response.json();
+                if (result.code === 200) {
+                    alert('出库成功');
+                    loadData();
+                } else {
+                    alert(result.message || '出库失败');
+                }
+            } catch (error) {
+                alert('出库失败');
+            }
+        }
+    </script>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.waste.mapper.DisposalRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.hospital.waste.entity.DisposalRecord">
+        <id column="id" property="id"/>
+        <result column="waste_id" property="wasteId"/>
+        <result column="disposal_org_id" property="disposalOrgId"/>
+        <result column="disposal_time" property="disposalTime"/>
+        <result column="disposal_weight" property="disposalWeight"/>
+        <result column="disposal_method" property="disposalMethod"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM biz_disposal_record ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM biz_disposal_record WHERE id = #{id}
+    </select>
+
+    <select id="selectByWasteId" resultMap="BaseResultMap">
+        SELECT * FROM biz_disposal_record WHERE waste_id = #{wasteId}
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM biz_disposal_record WHERE status = #{status}
+    </select>
+
+    <insert id="insert" parameterType="com.hospital.waste.entity.DisposalRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_disposal_record (waste_id, disposal_org_id, disposal_time, disposal_weight,
+                                         disposal_method, operator_id, status, remark, create_time)
+        VALUES (#{wasteId}, #{disposalOrgId}, #{disposalTime}, #{disposalWeight},
+                #{disposalMethod}, #{operatorId}, #{status}, #{remark}, NOW())
+    </insert>
+
+    <update id="update" parameterType="com.hospital.waste.entity.DisposalRecord">
+        UPDATE biz_disposal_record
+        <set>
+            <if test="wasteId != null">waste_id = #{wasteId},</if>
+            <if test="disposalOrgId != null">disposal_org_id = #{disposalOrgId},</if>
+            <if test="disposalTime != null">disposal_time = #{disposalTime},</if>
+            <if test="disposalWeight != null">disposal_weight = #{disposalWeight},</if>
+            <if test="disposalMethod != null">disposal_method = #{disposalMethod},</if>
+            <if test="operatorId != null">operator_id = #{operatorId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_disposal_record WHERE id = #{id}
+    </delete>
+
+    <select id="countByDateRange" resultType="int">
+        SELECT COUNT(*) FROM biz_disposal_record
+        WHERE disposal_time BETWEEN #{startTime} AND #{endTime}
+    </select>
+
+</mapper>

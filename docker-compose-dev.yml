@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/mysql:8.0
+    container_name: medical-waste-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: medical_waste
+      MYSQL_USER: medical_user
+      MYSQL_PASSWORD: medical123
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    networks:
+      - medical-waste-network
+
+  # 医疗废物管理系统应用（开发模式-热加载）
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: medical-waste-app-dev
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: medical_waste
+      DB_USERNAME: root
+      DB_PASSWORD: root123
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8080:8080"
+    volumes:
+      # 挂载源代码目录，实现热加载
+      - ./src:/app/src
+      - ./pom.xml:/app/pom.xml
+    networks:
+      - medical-waste-network
+
+volumes:
+  mysql_data:
+
+networks:
+  medical-waste-network:
+    driver: bridge

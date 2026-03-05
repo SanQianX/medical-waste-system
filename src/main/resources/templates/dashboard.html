@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页仪表盘 - 医院废料管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; }
+        .header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 50; }
+        .header-title { font-size: 20px; font-weight: 600; color: #2c3e50; }
+        .header-user { display: flex; align-items: center; gap: 15px; }
+        .btn { padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .container { padding: 30px; max-width: 1400px; margin: 0 auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+        .stat-card .label { font-size: 14px; color: #999; margin-bottom: 10px; }
+        .stat-card .value { font-size: 32px; font-weight: 700; color: #2c3e50; }
+        .stat-card.warning .value { color: #f39c12; }
+        .stat-card.danger .value { color: #e74c3c; }
+        .stat-card.success .value { color: #2ecc71; }
+        .stat-card.info .value { color: #3498db; }
+        .section { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { background: #f8f9fa; padding: 12px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #eee; }
+        .table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .table tr:hover { background: #f8f9fa; }
+        .status-tag { display: inline-block; padding: 4px 10px; border-radius: 3px; font-size: 12px; }
+        .status-1 { background: #fff3cd; color: #856404; }
+        .status-2 { background: #cce5ff; color: #004085; }
+        .status-3 { background: #d4edda; color: #155724; }
+        .status-4 { background: #f8d7da; color: #721c24; }
+        .quick-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .quick-link { display: block; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; text-align: center; transition: transform 0.3s; }
+        .quick-link:hover { transform: translateY(-5px); }
+        .quick-link .icon { font-size: 28px; margin-bottom: 10px; }
+        .quick-link.secondary { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .warning-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .warning-item:last-child { border-bottom: none; }
+        .warning-icon { margin-right: 12px; font-size: 20px; }
+        .warning-text { flex: 1; }
+        .warning-time { color: #999; font-size: 12px; }
+        .empty-tip { text-align: center; padding: 30px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">🏥 医院医院废料管理系统 - 首页仪表盘</div>
+        <div class="header-user">
+            <span>欢迎，管理员</span>
+            <button class="btn btn-primary" onclick="location.href='/'">退出</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">今日废物产生量</div>
+                <div class="value" id="todayCount">0 kg</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="label">待转运记录</div>
+                <div class="value" id="pendingTransfer">0</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="label">库存中废物</div>
+                <div class="value" id="inStorage">0</div>
+            </div>
+            <div class="stat-card success">
+                <div class="label">本月已处置</div>
+                <div class="value" id="disposedThisMonth">0 kg</div>
+            </div>
+        </div>
+
+        <!-- 快捷入口 -->
+        <div class="section">
+            <div class="section-title">快捷入口</div>
+            <div class="quick-links">
+                <a href="/page/waste-record" class="quick-link">
+                    <div class="icon">📝</div>
+                    <div>废物登记</div>
+                </a>
+                <a href="/page/transfer" class="quick-link secondary">
+                    <div class="icon">🚚</div>
+                    <div>转运管理</div>
+                </a>
+                <a href="/page/storage" class="quick-link">
+                    <div class="icon">📦</div>
+                    <div>贮存管理</div>
+                </a>
+                <a href="/page/disposal" class="quick-link secondary">
+                    <div class="icon">🔥</div>
+                    <div>处置管理</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 预警提醒 -->
+        <div class="section">
+            <div class="section-title">预警提醒</div>
+            <div id="warningList">
+                <div class="empty-tip">加载中...</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- 最新废物记录 -->
+            <div class="section">
+                <div class="section-title">最新废物记录</div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>废物编码</th>
+                            <th>重量(kg)</th>
+                            <th>状态</th>
+                            <th>产生时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="latestRecords">
+                        <tr><td colspan="4" style="text-align:center;color:#999;">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 转运状态概览 -->
+            <div class="section">
+                <div class="section-title">转运状态概览</div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>转运单号</th>
+                            <th>状态</th>
+                            <th>转运时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transferList">
+                        <tr><td colspan="3" style="text-align:center;color:#999;">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取认证头
+        function getAuthHeaders() {
+            const token = localStorage.getItem('token');
+            const userId = localStorage.getItem('userId');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['X-Token'] = token;
+            if (userId) headers['X-User-Id'] = userId;
+            return headers;
+        }
+
+        // 检查登录状态
+        (function() {
+            const token = localStorage.getItem('token');
+            const userId = localStorage.getItem('userId');
+            if (!token || !userId) {
+                // 未登录，跳转到登录页
+                window.location.href = '/page/login';
+                return;
+            }
+        })();
+
+        // 显示登录用户名
+        (function() {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    document.querySelector('.header-user span').textContent = '欢迎，' + (user.realName || user.username || '用户');
+                } catch(e) {}
+            }
+        })();
+
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                const authHeaders = getAuthHeaders();
+
+                // 加载废物记录统计
+                const wasteRes = await fetch('/api/v1/waste/list', { headers: authHeaders });
+                const wasteData = await wasteRes.json();
+                if (wasteData.code === 200) {
+                    const records = wasteData.data || [];
+                    let todayWeight = 0;
+                    let inStorageCount = 0;
+                    let disposedWeight = 0;
+                    const today = new Date().toISOString().split('T')[0];
+                    const currentMonth = today.substring(0, 7);
+
+                    records.forEach(r => {
+                        const genDate = r.generateTime ? r.generateTime.split('T')[0] : '';
+                        const disposeDate = r.disposalTime ? r.disposalTime.split('T')[0] : '';
+
+                        if (genDate === today) {
+                            todayWeight += parseFloat(r.weight || 0);
+                        }
+                        if (r.status === 3) { // 贮存中
+                            inStorageCount++;
+                        }
+                        if (disposeDate.substring(0, 7) === currentMonth && r.status === 4) {
+                            disposedWeight += parseFloat(r.weight || 0);
+                        }
+                    });
+
+                    document.getElementById('todayCount').textContent = todayWeight.toFixed(2) + ' kg';
+                    document.getElementById('inStorage').textContent = inStorageCount;
+                    document.getElementById('disposedThisMonth').textContent = disposedWeight.toFixed(2) + ' kg';
+
+                    // 显示最新5条记录
+                    const latest = records.slice(0, 5);
+                    const tbody = document.getElementById('latestRecords');
+                    if (latest.length > 0) {
+                        tbody.innerHTML = latest.map(r => `
+                            <tr>
+                                <td>${r.wasteCode || '-'}</td>
+                                <td>${r.weight || 0}</td>
+                                <td><span class="status-tag status-${r.status || 1}">${getStatusText(r.status)}</span></td>
+                                <td>${r.generateTime ? r.generateTime.substring(0, 16) : '-'}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999;">暂无数据</td></tr>';
+                    }
+                }
+
+                // 加载转运记录
+                const transferRes = await fetch('/api/v1/transfer/list', { headers: authHeaders });
+                const transferData = await transferRes.json();
+                if (transferData.code === 200) {
+                    const transfers = (transferData.data || []).slice(0, 5);
+                    const pendingCount = transferData.data ? transferData.data.filter(t => t.status === 1).length : 0;
+                    document.getElementById('pendingTransfer').textContent = pendingCount;
+
+                    const tbody = document.getElementById('transferList');
+                    if (transfers.length > 0) {
+                        tbody.innerHTML = transfers.map(t => `
+                            <tr>
+                                <td>${t.transferNo || '-'}</td>
+                                <td><span class="status-tag status-${t.status || 1}">${getTransferStatusText(t.status)}</span></td>
+                                <td>${t.transferTime ? t.transferTime.substring(0, 16) : '-'}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#999;">暂无数据</td></tr>';
+                    }
+                }
+
+                // 加载预警数据
+                loadWarnings();
+            } catch (e) {
+                console.error('加载数据失败:', e);
+            }
+        }
+
+        // 加载预警数据
+        async function loadWarnings() {
+            try {
+                const authHeaders = getAuthHeaders();
+                const warningRes = await fetch('/api/v1/warning/list', { headers: authHeaders });
+                const warningData = await warningRes.json();
+                const warningList = document.getElementById('warningList');
+
+                if (warningData.code === 200 && warningData.data && warningData.data.length > 0) {
+                    const warnings = warningData.data.slice(0, 5);
+                    warningList.innerHTML = warnings.map(w => `
+                        <div class="warning-item">
+                            <span class="warning-icon">⚠️</span>
+                            <div class="warning-text">
+                                <div>${w.warningContent || '预警信息'}</div>
+                                <div class="warning-time">${w.createTime ? w.createTime.substring(0, 16) : ''}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    warningList.innerHTML = '<div class="empty-tip">暂无预警信息</div>';
+                }
+            } catch (e) {
+                document.getElementById('warningList').innerHTML = '<div class="empty-tip">暂无预警信息</div>';
+            }
+        }
+
+        function getStatusText(status) {
+            const texts = {1: '待收集', 2: '已收集', 3: '已转运', 4: '已处置'};
+            return texts[status] || '未知';
+        }
+
+        function getTransferStatusText(status) {
+            const texts = {1: '待转运', 2: '运输中', 3: '已到达', 4: '已完成'};
+            return texts[status] || '未知';
+        }
+
+        // 页面加载完成后获取数据
+        document.addEventListener('DOMContentLoaded', loadStats);
+    </script>
+</body>
+</html>

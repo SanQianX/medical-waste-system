@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.waste.mapper.SysWarningMapper">
+
+    <resultMap id="BaseResultMap" type="com.hospital.waste.entity.SysWarning">
+        <id column="id" property="id"/>
+        <result column="warning_type" property="warningType"/>
+        <result column="waste_id" property="wasteId"/>
+        <result column="warehouse_id" property="warehouseId"/>
+        <result column="warning_msg" property="warningMsg"/>
+        <result column="warning_level" property="warningLevel"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="handle_time" property="handleTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM sys_warning ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM sys_warning WHERE id = #{id}
+    </select>
+
+    <select id="selectByWarningType" resultMap="BaseResultMap">
+        SELECT * FROM sys_warning WHERE warning_type = #{warningType}
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM sys_warning WHERE status = #{status}
+    </select>
+
+    <select id="selectByWasteId" resultMap="BaseResultMap">
+        SELECT * FROM sys_warning WHERE waste_id = #{wasteId}
+    </select>
+
+    <select id="selectByWarehouseId" resultMap="BaseResultMap">
+        SELECT * FROM sys_warning WHERE warehouse_id = #{warehouseId}
+    </select>
+
+    <select id="selectByWarningLevel" resultMap="BaseResultMap">
+        SELECT * FROM sys_warning WHERE warning_level = #{warningLevel} ORDER BY create_time DESC
+    </select>
+
+    <select id="selectUnprocessed" resultMap="BaseResultMap">
+        SELECT * FROM sys_warning WHERE status = 0 ORDER BY warning_level DESC, create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="com.hospital.waste.entity.SysWarning" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_warning (warning_type, waste_id, warehouse_id, warning_msg, warning_level, status, create_time)
+        VALUES (#{warningType}, #{wasteId}, #{warehouseId}, #{warningMsg}, #{warningLevel}, #{status}, NOW())
+    </insert>
+
+    <update id="update" parameterType="com.hospital.waste.entity.SysWarning">
+        UPDATE sys_warning
+        <set>
+            <if test="warningType != null">warning_type = #{warningType},</if>
+            <if test="wasteId != null">waste_id = #{wasteId},</if>
+            <if test="warehouseId != null">warehouse_id = #{warehouseId},</if>
+            <if test="warningMsg != null">warning_msg = #{warningMsg},</if>
+            <if test="warningLevel != null">warning_level = #{warningLevel},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="handleTime != null">handle_time = #{handleTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM sys_warning WHERE id = #{id}
+    </delete>
+
+</mapper>

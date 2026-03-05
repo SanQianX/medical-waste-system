@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.waste.mapper.StorageRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.hospital.waste.entity.StorageRecord">
+        <id column="id" property="id"/>
+        <result column="waste_id" property="wasteId"/>
+        <result column="warehouse_id" property="warehouseId"/>
+        <result column="in_time" property="inTime"/>
+        <result column="out_time" property="outTime"/>
+        <result column="storage_days" property="storageDays"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM biz_storage_record ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM biz_storage_record WHERE id = #{id}
+    </select>
+
+    <select id="selectByWasteId" resultMap="BaseResultMap">
+        SELECT * FROM biz_storage_record WHERE waste_id = #{wasteId}
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM biz_storage_record WHERE status = #{status}
+    </select>
+
+    <insert id="insert" parameterType="com.hospital.waste.entity.StorageRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_storage_record (waste_id, warehouse_id, in_time, out_time, storage_days, status, create_time)
+        VALUES (#{wasteId}, #{warehouseId}, #{inTime}, #{outTime}, #{storageDays}, #{status}, NOW())
+    </insert>
+
+    <update id="update" parameterType="com.hospital.waste.entity.StorageRecord">
+        UPDATE biz_storage_record
+        <set>
+            <if test="wasteId != null">waste_id = #{wasteId},</if>
+            <if test="warehouseId != null">warehouse_id = #{warehouseId},</if>
+            <if test="inTime != null">in_time = #{inTime},</if>
+            <if test="outTime != null">out_time = #{outTime},</if>
+            <if test="storageDays != null">storage_days = #{storageDays},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_storage_record WHERE id = #{id}
+    </delete>
+
+</mapper>

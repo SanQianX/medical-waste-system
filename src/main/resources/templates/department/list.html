@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科室管理 - 医院废料管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="page-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="logo">
+                <h2>医院废料管理系统</h2>
+            </div>
+
+            <div class="menu-group">概览</div>
+            <a href="/page/dashboard" class="menu-item">
+                <span class="icon">📊</span> 首页仪表盘
+            </a>
+
+            <div class="menu-group">基础数据</div>
+            <a href="/page/department" class="menu-item active">
+                <span class="icon">🏥</span> 科室管理
+            </a>
+            <a href="/page/waste-category" class="menu-item">
+                <span class="icon">🗑️</span> 废物类别管理
+            </a>
+            <a href="/page/warehouse" class="menu-item">
+                <span class="icon">🏭</span> 仓库管理
+            </a>
+            <a href="/page/disposal-org" class="menu-item">
+                <span class="icon">🏢</span> 处置机构管理
+            </a>
+
+            <div class="menu-group">业务管理</div>
+            <a href="/page/waste-record" class="menu-item">
+                <span class="icon">📝</span> 废物产生记录
+            </a>
+            <a href="/page/transfer" class="menu-item">
+                <span class="icon">🚚</span> 转运管理
+            </a>
+            <a href="/page/storage" class="menu-item">
+                <span class="icon">📦</span> 贮存管理
+            </a>
+            <a href="/page/disposal" class="menu-item">
+                <span class="icon">🔥</span> 处置管理
+            </a>
+            <a href="/page/warning" class="menu-item">
+                <span class="icon">⚠️</span> 预警管理
+            </a>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <div class="header-title">科室管理</div>
+                <div class="header-user">
+                    <span>欢迎，管理员</span>
+                    <a href="/" class="btn btn-primary btn-sm">退出</a>
+                </div>
+            </div>
+
+            <div class="content">
+        <div class="card-header">
+            <h3 class="card-title">科室列表</h3>
+            <button class="btn btn-primary" onclick="showAddModal()">新增科室</button>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchKeyword" placeholder="搜索科室名称/编码...">
+            <button class="btn btn-primary" onclick="loadData()">搜索</button>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>科室编码</th>
+                    <th>科室名称</th>
+                    <th>科室类型</th>
+                    <th>负责人</th>
+                    <th>联系电话</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- 数据加载中 -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 新增/编辑弹窗 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">新增科室</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label class="form-label">科室编码 *</label>
+                    <input type="text" class="form-control" id="deptCode" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">科室名称 *</label>
+                    <input type="text" class="form-control" id="deptName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">科室类型</label>
+                    <select class="form-control" id="deptType">
+                        <option value="门诊">门诊</option>
+                        <option value="住院">住院</option>
+                        <option value="急诊">急诊</option>
+                        <option value="手术">手术室</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">负责人</label>
+                    <input type="text" class="form-control" id="leader">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">联系电话</label>
+                    <input type="text" class="form-control" id="phone">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select class="form-control" id="status">
+                        <option value="1">正常</option>
+                        <option value="0">禁用</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+
+        // 页面加载完成后加载数据
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+        });
+
+        // 加载数据
+        async function loadData() {
+            try {
+                const response = await fetch('/api/v1/department/list');
+                const result = await response.json();
+                if (result.code === 200) {
+                    currentData = result.data || [];
+                    renderTable(currentData);
+                }
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                alert('加载数据失败');
+            }
+        }
+
+        // 渲染表格
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td>${item.id || ''}</td>
+                    <td>${item.deptCode || ''}</td>
+                    <td>${item.deptName || ''}</td>
+                    <td>${item.deptType || ''}</td>
+                    <td>${item.leader || ''}</td>
+                    <td>${item.phone || ''}</td>
+                    <td><span class="status-tag status-${item.status || 1}">${item.status === 1 ? '正常' : '禁用'}</span></td>
+                    <td>
+                        <button class="btn btn-warning" onclick="editItem(${item.id})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteItem(${item.id})">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 显示新增弹窗
+        function showAddModal() {
+            document.getElementById('modalTitle').innerText = '新增科室';
+            document.getElementById('editForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        // 编辑
+        async function editItem(id) {
+            const item = currentData.find(d => d.id === id);
+            if (!item) return;
+
+            document.getElementById('modalTitle').innerText = '编辑科室';
+            document.getElementById('editId').value = item.id;
+            document.getElementById('deptCode').value = item.deptCode || '';
+            document.getElementById('deptName').value = item.deptName || '';
+            document.getElementById('deptType').value = item.deptType || '门诊';
+            document.getElementById('leader').value = item.leader || '';
+            document.getElementById('phone').value = item.phone || '';
+            document.getElementById('status').value = item.status || 1;
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        // 删除
+        async function deleteItem(id) {
+            if (!confirm('确定要删除该科室吗？')) return;
+
+            try {
+                const response = await fetch(`/api/v1/department/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.code === 200) {
+                    alert('删除成功');
+                    loadData();
+                } else {
+                    alert(result.message || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败');
+            }
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('show');
+        }
+
+        // 表单提交
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('editId').value;
+            const data = {
+                deptCode: document.getElementById('deptCode').value,
+                deptName: document.getElementById('deptName').value,
+                deptType: document.getElementById('deptType').value,
+                leader: document.getElementById('leader').value,
+                phone: document.getElementById('phone').value,
+                status: parseInt(document.getElementById('status').value)
+            };
+
+            try {
+                let response;
+                if (id) {
+                    // 更新
+                    response = await fetch(`/api/v1/department/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // 新增
+                    response = await fetch('/api/v1/department', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    alert('保存成功');
+                    closeModal();
+                    loadData();
+                } else {
+                    alert(result.message || '保存失败');
+                }
+            } catch (error) {
+                console.error('保存失败:', error);
+                alert('保存失败');
+            }
+        });
+    </script>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

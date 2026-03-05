@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    # 替换为华为云镜像源，避免MySQL镜像拉取失败
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/mysql:8.0
+    container_name: medical-waste-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: medical_waste
+      MYSQL_USER: medical_user
+      MYSQL_PASSWORD: medical123
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 初始化SQL脚本
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      - --max_connections=200
+      - --wait_timeout=28800
+    networks:
+      - medical-waste-network
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  # 医疗废物管理系统应用
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # 新增：指定构建时使用的镜像（避免Dockerfile中拉取失败）
+      args:
+        - MAVEN_IMAGE=maven:3.9.9-eclipse-temurin-8-noble-linuxarm64
+        - OPENJDK_IMAGE=openjdk:11-jdk-slim
+    container_name: medical-waste-app
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      # 使用docker-compose定义的环境变量
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: medical_waste
+      DB_USERNAME: root
+      DB_PASSWORD: root123
+      SPRING_PROFILES_ACTIVE: docker
+      # Java虚拟机参数
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    ports:
+      - "8080:8080"
+    networks:
+      - medical-waste-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 768M
+
+volumes:
+  mysql_data:
+
+networks:
+  medical-waste-network:
+    driver: bridge

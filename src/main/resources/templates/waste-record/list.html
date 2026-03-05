@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>废物产生记录 - 医院废料管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="page-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="logo">
+                <h2>医院废料管理系统</h2>
+            </div>
+
+            <div class="menu-group">概览</div>
+            <a href="/page/dashboard" class="menu-item">
+                <span class="icon">📊</span> 首页仪表盘
+            </a>
+
+            <div class="menu-group">基础数据</div>
+            <a href="/page/department" class="menu-item">
+                <span class="icon">🏥</span> 科室管理
+            </a>
+            <a href="/page/waste-category" class="menu-item">
+                <span class="icon">🗑️</span> 废物类别管理
+            </a>
+            <a href="/page/warehouse" class="menu-item">
+                <span class="icon">🏭</span> 仓库管理
+            </a>
+            <a href="/page/disposal-org" class="menu-item">
+                <span class="icon">🏢</span> 处置机构管理
+            </a>
+
+            <div class="menu-group">业务管理</div>
+            <a href="/page/waste-record" class="menu-item active">
+                <span class="icon">📝</span> 废物产生记录
+            </a>
+            <a href="/page/transfer" class="menu-item">
+                <span class="icon">🚚</span> 转运管理
+            </a>
+            <a href="/page/storage" class="menu-item">
+                <span class="icon">📦</span> 贮存管理
+            </a>
+            <a href="/page/disposal" class="menu-item">
+                <span class="icon">🔥</span> 处置管理
+            </a>
+            <a href="/page/warning" class="menu-item">
+                <span class="icon">⚠️</span> 预警管理
+            </a>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <div class="header-title">废物产生记录</div>
+                <div class="header-user">
+                    <span>欢迎，管理员</span>
+                    <a href="/" class="btn btn-primary btn-sm">退出</a>
+                </div>
+            </div>
+
+            <div class="content">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">待收集</div>
+            <div class="value" id="stat-1">0</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="label">已收集</div>
+            <div class="value" id="stat-2">0</div>
+        </div>
+        <div class="stat-card success">
+            <div class="label">已转运</div>
+            <div class="value" id="stat-3">0</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="label">已处置</div>
+            <div class="value" id="stat-4">0</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">废物记录列表</h3>
+            <button class="btn btn-primary" onclick="showAddModal()">新增记录</button>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchKeyword" placeholder="搜索废物编码...">
+            <select class="form-control" id="searchStatus" style="width: 150px;">
+                <option value="">全部状态</option>
+                <option value="1">待收集</option>
+                <option value="2">已收集</option>
+                <option value="3">已转运</option>
+                <option value="4">已处置</option>
+            </select>
+            <button class="btn btn-primary" onclick="loadData()">搜索</button>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>废物编码</th>
+                    <th>废物类别</th>
+                    <th>产生科室</th>
+                    <th>重量(kg)</th>
+                    <th>容器数量</th>
+                    <th>产生时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">新增废物记录</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="editForm">
+                <div class="form-group">
+                    <label class="form-label">废物类别 *</label>
+                    <select class="form-control" id="categoryId" required>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">产生科室 *</label>
+                    <select class="form-control" id="departmentId" required>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">重量(kg) *</label>
+                    <input type="number" step="0.01" class="form-control" id="weight" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">容器数量 *</label>
+                    <input type="number" class="form-control" id="containerCount" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">产生时间 *</label>
+                    <input type="datetime-local" class="form-control" id="generateTime" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注</label>
+                    <textarea class="form-control" id="remark" rows="2"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+        let categories = [];
+        let departments = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOptions();
+            loadData();
+        });
+
+        async function loadOptions() {
+            try {
+                const [catRes, deptRes] = await Promise.all([
+                    fetch('/api/v1/waste-category/list'),
+                    fetch('/api/v1/department/list')
+                ]);
+                const catResult = await catRes.json();
+                const deptResult = await deptRes.json();
+
+                categories = catResult.data || [];
+                departments = deptResult.data || [];
+
+                const catSelect = document.getElementById('categoryId');
+                const deptSelect = document.getElementById('departmentId');
+
+                catSelect.innerHTML = categories.map(c =>
+                    `<option value="${c.id}">${c.categoryName}</option>`
+                ).join('');
+
+                deptSelect.innerHTML = departments.map(d =>
+                    `<option value="${d.id}">${d.deptName}</option>`
+                ).join('');
+            } catch (error) {
+                console.error('加载选项失败:', error);
+            }
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch('/api/v1/waste/list');
+                const result = await response.json();
+                if (result.code === 200) {
+                    currentData = result.data || [];
+                    updateStats();
+                    renderTable(currentData);
+                }
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+
+        function updateStats() {
+            const stats = {1: 0, 2: 0, 3: 0, 4: 0};
+            currentData.forEach(item => {
+                if (stats[item.status] !== undefined) stats[item.status]++;
+            });
+            document.getElementById('stat-1').innerText = stats[1];
+            document.getElementById('stat-2').innerText = stats[2];
+            document.getElementById('stat-3').innerText = stats[3];
+            document.getElementById('stat-4').innerText = stats[4];
+        }
+
+        function getStatusText(status) {
+            const map = {1: '待收集', 2: '已收集', 3: '已转运', 4: '已处置'};
+            return map[status] || '未知';
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无数据</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => {
+                const category = categories.find(c => c.id === item.categoryId);
+                const department = departments.find(d => d.id === item.departmentId);
+                const genTime = item.generateTime ? new Date(item.generateTime).toLocaleString() : '';
+                return `
+                    <tr>
+                        <td>${item.wasteCode || ''}</td>
+                        <td>${category ? category.categoryName : ''}</td>
+                        <td>${department ? department.deptName : ''}</td>
+                        <td>${item.weight || ''}</td>
+                        <td>${item.containerCount || ''}</td>
+                        <td>${genTime}</td>
+                        <td><span class="status-tag status-${item.status}">${getStatusText(item.status)}</span></td>
+                        <td>
+                            ${item.status < 4 ? `<button class="btn btn-success" onclick="updateStatus(${item.id}, ${item.status + 1})">${getStatusText(item.status + 1)}</button>` : ''}
+                            <button class="btn btn-danger" onclick="deleteItem(${item.id})">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showAddModal() {
+            document.getElementById('modalTitle').innerText = '新增废物记录';
+            document.getElementById('editForm').reset();
+            document.getElementById('generateTime').value = new Date().toISOString().slice(0, 16);
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        async function updateStatus(id, newStatus) {
+            if (!confirm(`确定要将状态更新为"${getStatusText(newStatus)}"吗？`)) return;
+
+            try {
+                const response = await fetch(`/api/v1/waste/${id}/status/${newStatus}`, {
+                    method: 'PUT'
+                });
+                const result = await response.json();
+                if (result.code === 200) {
+                    alert('状态更新成功');
+                    loadData();
+                } else {
+                    alert(result.message || '更新失败');
+                }
+            } catch (error) {
+                alert('更新失败');
+            }
+        }
+
+        async function deleteItem(id) {
+            if (!confirm('确定要删除该记录吗？')) return;
+
+            try {
+                const response = await fetch(`/api/v1/waste/${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (result.code === 200) {
+                    alert('删除成功');
+                    loadData();
+                } else {
+                    alert(result.message || '删除失败');
+                }
+            } catch (error) {
+                alert('删除失败');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('show');
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const data = {
+                categoryId: parseInt(document.getElementById('categoryId').value),
+                departmentId: parseInt(document.getElementById('departmentId').value),
+                weight: parseFloat(document.getElementById('weight').value),
+                containerCount: parseInt(document.getElementById('containerCount').value),
+                generateTime: document.getElementById('generateTime').value,
+                remark: document.getElementById('remark').value
+            };
+
+            try {
+                const response = await fetch('/api/v1/waste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.code === 200) {
+                    alert('保存成功');
+                    closeModal();
+                    loadData();
+                } else {
+                    alert(result.message || '保存失败');
+                }
+            } catch (error) {
+                alert('保存失败');
+            }
+        });
+    </script>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

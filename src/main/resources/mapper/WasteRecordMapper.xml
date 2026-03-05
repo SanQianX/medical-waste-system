@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.waste.mapper.WasteRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.hospital.waste.entity.WasteRecord">
+        <id column="id" property="id"/>
+        <result column="waste_code" property="wasteCode"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="department_id" property="departmentId"/>
+        <result column="weight" property="weight"/>
+        <result column="container_count" property="containerCount"/>
+        <result column="generator_id" property="generatorId"/>
+        <result column="generate_time" property="generateTime"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM biz_waste_record ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM biz_waste_record WHERE id = #{id}
+    </select>
+
+    <select id="selectByWasteCode" resultMap="BaseResultMap">
+        SELECT * FROM biz_waste_record WHERE waste_code = #{wasteCode}
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM biz_waste_record WHERE status = #{status}
+    </select>
+
+    <select id="selectByDepartmentId" resultMap="BaseResultMap">
+        SELECT * FROM biz_waste_record WHERE department_id = #{departmentId}
+    </select>
+
+    <insert id="insert" parameterType="com.hospital.waste.entity.WasteRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_waste_record (waste_code, category_id, department_id, weight, container_count,
+                                     generator_id, generate_time, status, remark, create_time, update_time)
+        VALUES (#{wasteCode}, #{categoryId}, #{departmentId}, #{weight}, #{containerCount},
+                #{generatorId}, #{generateTime}, #{status}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="com.hospital.waste.entity.WasteRecord">
+        UPDATE biz_waste_record
+        <set>
+            <if test="wasteCode != null">waste_code = #{wasteCode},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="departmentId != null">department_id = #{departmentId},</if>
+            <if test="weight != null">weight = #{weight},</if>
+            <if test="containerCount != null">container_count = #{containerCount},</if>
+            <if test="generatorId != null">generator_id = #{generatorId},</if>
+            <if test="generateTime != null">generate_time = #{generateTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_waste_record WHERE id = #{id}
+    </delete>
+
+    <select id="countByDateRange" resultType="int">
+        SELECT COUNT(*) FROM biz_waste_record
+        WHERE generate_time BETWEEN #{startTime} AND #{endTime}
+    </select>
+
+    <select id="countByDepartmentAndDateRange" resultType="int">
+        SELECT COUNT(*) FROM biz_waste_record
+        WHERE department_id = #{departmentId}
+        AND generate_time BETWEEN #{startTime} AND #{endTime}
+    </select>
+
+</mapper>

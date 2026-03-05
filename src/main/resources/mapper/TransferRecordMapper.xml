@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.waste.mapper.TransferRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.hospital.waste.entity.TransferRecord">
+        <id column="id" property="id"/>
+        <result column="transfer_no" property="transferNo"/>
+        <result column="waste_ids" property="wasteIds"/>
+        <result column="from_department_id" property="fromDepartmentId"/>
+        <result column="to_warehouse_id" property="toWarehouseId"/>
+        <result column="transporter_id" property="transporterId"/>
+        <result column="transfer_time" property="transferTime"/>
+        <result column="receive_time" property="receiveTime"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM biz_transfer_record ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM biz_transfer_record WHERE id = #{id}
+    </select>
+
+    <select id="selectByTransferNo" resultMap="BaseResultMap">
+        SELECT * FROM biz_transfer_record WHERE transfer_no = #{transferNo}
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM biz_transfer_record WHERE status = #{status}
+    </select>
+
+    <insert id="insert" parameterType="com.hospital.waste.entity.TransferRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_transfer_record (transfer_no, waste_ids, from_department_id, to_warehouse_id,
+                                         transporter_id, transfer_time, receive_time, status, remark,
+                                         create_time, update_time)
+        VALUES (#{transferNo}, #{wasteIds}, #{fromDepartmentId}, #{toWarehouseId},
+                #{transporterId}, #{transferTime}, #{receiveTime}, #{status}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="com.hospital.waste.entity.TransferRecord">
+        UPDATE biz_transfer_record
+        <set>
+            <if test="transferNo != null">transfer_no = #{transferNo},</if>
+            <if test="wasteIds != null">waste_ids = #{wasteIds},</if>
+            <if test="fromDepartmentId != null">from_department_id = #{fromDepartmentId},</if>
+            <if test="toWarehouseId != null">to_warehouse_id = #{toWarehouseId},</if>
+            <if test="transporterId != null">transporter_id = #{transporterId},</if>
+            <if test="transferTime != null">transfer_time = #{transferTime},</if>
+            <if test="receiveTime != null">receive_time = #{receiveTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_transfer_record WHERE id = #{id}
+    </delete>
+
+    <select id="countByDateRange" resultType="int">
+        SELECT COUNT(*) FROM biz_transfer_record
+        WHERE transfer_time BETWEEN #{startTime} AND #{endTime}
+    </select>
+
+</mapper>

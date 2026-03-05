@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.waste.mapper.DepartmentMapper">
+
+    <resultMap id="BaseResultMap" type="com.hospital.waste.entity.Department">
+        <id column="id" property="id"/>
+        <result column="dept_code" property="deptCode"/>
+        <result column="dept_name" property="deptName"/>
+        <result column="dept_type" property="deptType"/>
+        <result column="leader" property="leader"/>
+        <result column="phone" property="phone"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM base_department ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM base_department WHERE id = #{id}
+    </select>
+
+    <select id="selectByDeptCode" resultMap="BaseResultMap">
+        SELECT * FROM base_department WHERE dept_code = #{deptCode}
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM base_department WHERE status = #{status}
+    </select>
+
+    <insert id="insert" parameterType="com.hospital.waste.entity.Department" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO base_department (dept_code, dept_name, dept_type, leader, phone, status, create_time)
+        VALUES (#{deptCode}, #{deptName}, #{deptType}, #{leader}, #{phone}, #{status}, NOW())
+    </insert>
+
+    <update id="update" parameterType="com.hospital.waste.entity.Department">
+        UPDATE base_department
+        <set>
+            <if test="deptCode != null">dept_code = #{deptCode},</if>
+            <if test="deptName != null">dept_name = #{deptName},</if>
+            <if test="deptType != null">dept_type = #{deptType},</if>
+            <if test="leader != null">leader = #{leader},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM base_department WHERE id = #{id}
+    </delete>
+
+</mapper>

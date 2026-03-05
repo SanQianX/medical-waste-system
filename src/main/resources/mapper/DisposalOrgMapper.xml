@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.waste.mapper.DisposalOrgMapper">
+
+    <resultMap id="BaseResultMap" type="com.hospital.waste.entity.DisposalOrg">
+        <id column="id" property="id"/>
+        <result column="org_code" property="orgCode"/>
+        <result column="org_name" property="orgName"/>
+        <result column="license_no" property="licenseNo"/>
+        <result column="contact_person" property="contactPerson"/>
+        <result column="phone" property="phone"/>
+        <result column="address" property="address"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM base_disposal_org ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM base_disposal_org WHERE id = #{id}
+    </select>
+
+    <select id="selectByOrgCode" resultMap="BaseResultMap">
+        SELECT * FROM base_disposal_org WHERE org_code = #{orgCode}
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM base_disposal_org WHERE status = #{status}
+    </select>
+
+    <insert id="insert" parameterType="com.hospital.waste.entity.DisposalOrg" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO base_disposal_org (org_code, org_name, license_no, contact_person, phone, address, status, create_time)
+        VALUES (#{orgCode}, #{orgName}, #{licenseNo}, #{contactPerson}, #{phone}, #{address}, #{status}, NOW())
+    </insert>
+
+    <update id="update" parameterType="com.hospital.waste.entity.DisposalOrg">
+        UPDATE base_disposal_org
+        <set>
+            <if test="orgCode != null">org_code = #{orgCode},</if>
+            <if test="orgName != null">org_name = #{orgName},</if>
+            <if test="licenseNo != null">license_no = #{licenseNo},</if>
+            <if test="contactPerson != null">contact_person = #{contactPerson},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM base_disposal_org WHERE id = #{id}
+    </delete>
+
+</mapper>

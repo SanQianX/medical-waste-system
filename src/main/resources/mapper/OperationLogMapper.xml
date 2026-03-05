@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.waste.mapper.OperationLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.hospital.waste.entity.OperationLog">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="module" property="module"/>
+        <result column="operation" property="operation"/>
+        <result column="method" property="method"/>
+        <result column="params" property="params"/>
+        <result column="result" property="result"/>
+        <result column="ip_address" property="ipAddress"/>
+        <result column="status" property="status"/>
+        <result column="error_msg" property="errorMsg"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM sys_operation_log ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM sys_operation_log WHERE id = #{id}
+    </select>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT * FROM sys_operation_log WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+
+    <select id="selectByModule" resultMap="BaseResultMap">
+        SELECT * FROM sys_operation_log WHERE module = #{module} ORDER BY create_time DESC
+    </select>
+
+    <select id="selectByDateRange" resultMap="BaseResultMap">
+        SELECT * FROM sys_operation_log
+        WHERE create_time BETWEEN #{startTime} AND #{endTime}
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="com.hospital.waste.entity.OperationLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_operation_log (user_id, username, module, operation, method, params, result, ip_address, status, error_msg, create_time)
+        VALUES (#{userId}, #{username}, #{module}, #{operation}, #{method}, #{params}, #{result}, #{ipAddress}, #{status}, #{errorMsg}, NOW())
+    </insert>
+
+    <delete id="deleteByDateRange">
+        DELETE FROM sys_operation_log WHERE create_time &lt; #{beforeTime}
+    </delete>
+
+</mapper>
