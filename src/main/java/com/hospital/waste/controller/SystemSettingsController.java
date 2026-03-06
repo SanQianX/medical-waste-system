@@ -71,7 +71,6 @@ public class SystemSettingsController {
         info.put("osName", System.getProperty("os.name"));
         info.put("serverTime", LocalDateTime.now().toString());
         info.put("code", 200);
-        info.put("data", info);
         return ResponseEntity.ok(info);
     }
 
