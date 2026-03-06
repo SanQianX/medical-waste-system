@@ -248,3 +248,21 @@ INSERT INTO container (container_code, container_type, specification, capacity, 
 ('CON202603050001', '利器盒', '5L', 5.0, 1, 1),
 ('CON202603050002', '塑料袋', '30L', 30.0, 1, 1),
 ('CON202603050003', '周转桶', '50L', 50.0, 2, 1);
+
+-- =====================================================
+-- 数据库升级脚本 (v1.0.1)
+-- =====================================================
+
+-- 升级操作日志表 - 添加缺失字段
+ALTER TABLE sys_operation_log
+ADD COLUMN IF NOT EXISTS operation_time DATETIME COMMENT '操作时间' AFTER error_msg,
+ADD COLUMN IF NOT EXISTS duration BIGINT COMMENT '操作耗时(毫秒)' AFTER operation_time,
+ADD COLUMN IF NOT EXISTS request_uri VARCHAR(500) COMMENT '请求URI' AFTER duration,
+ADD COLUMN IF NOT EXISTS request_method VARCHAR(10) COMMENT '请求方法' AFTER request_uri;
+
+-- 注意: MySQL 8.0 支持 ADD COLUMN IF NOT EXISTS
+-- 如果是 MySQL 5.7，请手动执行以下语句:
+-- ALTER TABLE sys_operation_log ADD COLUMN operation_time DATETIME COMMENT '操作时间' AFTER error_msg;
+-- ALTER TABLE sys_operation_log ADD COLUMN duration BIGINT COMMENT '操作耗时(毫秒)' AFTER operation_time;
+-- ALTER TABLE sys_operation_log ADD COLUMN request_uri VARCHAR(500) COMMENT '请求URI' AFTER duration;
+-- ALTER TABLE sys_operation_log ADD COLUMN request_method VARCHAR(10) COMMENT '请求方法' AFTER request_uri;

@@ -18,6 +18,10 @@ public class OperationLog {
     private String ipAddress;
     private Integer status;
     private String errorMsg;
+    private LocalDateTime operationTime;   // 操作时间
+    private Long duration;                  // 操作耗时(毫秒)
+    private String requestUri;              // 请求URI
+    private String requestMethod;           // 请求方法
     private LocalDateTime createTime;
 
     public OperationLog() {
@@ -117,5 +121,37 @@ public class OperationLog {
 
     public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
+    }
+
+    public LocalDateTime getOperationTime() {
+        return operationTime;
+    }
+
+    public void setOperationTime(LocalDateTime operationTime) {
+        this.operationTime = operationTime;
+    }
+
+    public Long getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Long duration) {
+        this.duration = duration;
+    }
+
+    public String getRequestUri() {
+        return requestUri;
+    }
+
+    public void setRequestUri(String requestUri) {
+        this.requestUri = requestUri;
+    }
+
+    public String getRequestMethod() {
+        return requestMethod;
+    }
+
+    public void setRequestMethod(String requestMethod) {
+        this.requestMethod = requestMethod;
     }
 }

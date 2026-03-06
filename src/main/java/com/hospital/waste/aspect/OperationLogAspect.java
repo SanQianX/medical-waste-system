@@ -85,10 +85,10 @@ public class OperationLogAspect {
                 long duration = System.currentTimeMillis() - startTime;
 
                 OperationLog log = new OperationLog();
-                log.setOperationType(operation);
+                log.setOperation(operation);
                 log.setModule(module);
-                log.setOperationDesc(getOperationDesc(methodObj, joinPoint.getArgs()));
-                log.setOperatorId(getUserId(request));
+                log.setParams(getOperationDesc(methodObj, joinPoint.getArgs()));
+                log.setUserId(getUserId(request));
                 log.setOperationTime(LocalDateTime.now());
                 log.setIpAddress(getClientIp(request));
                 log.setStatus(success ? 1 : 0);
