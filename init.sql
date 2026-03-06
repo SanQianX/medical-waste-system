@@ -92,7 +92,8 @@ CREATE TABLE IF NOT EXISTS biz_waste_record (
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_waste_code (waste_code),
     INDEX idx_department_id (department_id),
-    INDEX idx_generate_time (generate_time)
+    INDEX idx_generate_time (generate_time),
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='废物记录表';
 
 -- 转运记录表
@@ -122,7 +123,9 @@ CREATE TABLE IF NOT EXISTS biz_storage_record (
     storage_days INT COMMENT '存储天数',
     status TINYINT DEFAULT 1 COMMENT '状态(1贮存中/2已出库)',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_waste_id (waste_id)
+    INDEX idx_waste_id (waste_id),
+    INDEX idx_warehouse_id (warehouse_id),
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='贮存记录表';
 
 -- 处置记录表
@@ -150,7 +153,12 @@ CREATE TABLE IF NOT EXISTS sys_warning (
     warning_level TINYINT COMMENT '预警级别(1低/2中/3高)',
     status TINYINT DEFAULT 0 COMMENT '状态(0未处理/1已处理)',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    handle_time DATETIME COMMENT '处理时间'
+    handle_time DATETIME COMMENT '处理时间',
+    INDEX idx_warning_type (warning_type),
+    INDEX idx_waste_id (waste_id),
+    INDEX idx_warehouse_id (warehouse_id),
+    INDEX idx_status (status),
+    INDEX idx_create_time (create_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='预警记录表';
 
 -- 操作日志表
