@@ -53,19 +53,10 @@ public class AuthController {
             return ResponseEntity.ok(result);
         }
 
-        // 临时方案：同时支持BCrypt和明文密码比较
+        // 使用BCrypt验证密码
         boolean matches = false;
-        try {
-            // 先尝试BCrypt验证
-            if (user.getPassword() != null && user.getPassword().startsWith("$2")) {
-                matches = BCrypt.checkpw(password, user.getPassword());
-            }
-        } catch (Exception e) {
-            // BCrypt验证失败，尝试明文比较
-        }
-        // 如果BCrypt验证失败，尝试明文比较（临时方案）
-        if (!matches && password.equals(user.getPassword())) {
-            matches = true;
+        if (user.getPassword() != null && user.getPassword().startsWith("$2")) {
+            matches = BCrypt.checkpw(password, user.getPassword());
         }
 
         if (!matches) {
