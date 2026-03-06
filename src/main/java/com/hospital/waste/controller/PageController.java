@@ -63,6 +63,10 @@ public class PageController {
         pageTitles.put("warning", "预警管理");
         contentTemplates.put("warning", "warning/list");
 
+        // 操作日志
+        pageTitles.put("operation-log", "操作日志");
+        contentTemplates.put("operation-log", "operation-log/list");
+
         // 数据统计
         pageTitles.put("statistics", "数据统计");
         contentTemplates.put("statistics", "statistics");
@@ -202,6 +206,15 @@ public class PageController {
     public String statistics(Model model) {
         setPageModel(model, "statistics");
         return "statistics";
+    }
+
+    /**
+     * 操作日志页面
+     */
+    @GetMapping("/page/operation-log")
+    public String operationLog(Model model) {
+        setPageModel(model, "operation-log");
+        return "operation-log/list";
     }
 
     /**

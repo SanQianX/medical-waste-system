@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作日志 - 医院废物管理系统</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; }
+        .header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .header-title { font-size: 20px; font-weight: 600; color: #2c3e50; }
+        .header-user { display: flex; align-items: center; gap: 15px; }
+        .btn { padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .container { padding: 30px; max-width: 1400px; margin: 0 auto; }
+        .section { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .toolbar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-bar { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
+        .search-bar input, .search-bar select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { background: #f8f9fa; padding: 12px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #eee; }
+        .table td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+        .table tr:hover { background: #f8f9fa; }
+        .status-tag { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 12px; }
+        .status-1 { background: #d4edda; color: #155724; }
+        .status-0 { background: #f8d7da; color: #721c24; }
+        .pagination { display: flex; gap: 5px; justify-content: center; margin-top: 20px; }
+        .pagination button { padding: 5px 10px; }
+        .pagination button.active { background: #3498db; color: white; }
+        .empty-tip { text-align: center; padding: 40px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">医院废物管理系统 - 操作日志</div>
+        <div class="header-user">
+            <a href="/page/dashboard" class="btn btn-primary">返回首页</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <div class="section-title">操作日志列表</div>
+            <div class="toolbar">
+                <div class="search-bar">
+                    <input type="text" id="moduleInput" placeholder="模块名称...">
+                    <input type="text" id="operatorInput" placeholder="操作人ID...">
+                    <select id="statusFilter">
+                        <option value="">全部状态</option>
+                        <option value="1">成功</option>
+                        <option value="0">失败</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadLogs()">搜索</button>
+                    <button class="btn btn-primary" onclick="resetSearch()">重置</button>
+                </div>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>模块</th>
+                        <th>操作类型</th>
+                        <th>操作描述</th>
+                        <th>操作人ID</th>
+                        <th>IP地址</th>
+                        <th>请求方法</th>
+                        <th>状态</th>
+                        <th>耗时(ms)</th>
+                        <th>操作时间</th>
+                    </tr>
+                </thead>
+                <tbody id="logTable">
+                    <tr><td colspan="10" style="text-align:center;">加载中...</td></tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <script>
+        const authHeaders = {
+            'X-Token': localStorage.getItem('token') || '',
+            'X-User-Id': localStorage.getItem('userId') || ''
+        };
+
+        let currentPage = 1;
+        let pageSize = 20;
+
+        async function loadLogs(page = 1) {
+            currentPage = page;
+            try {
+                const module = document.getElementById('moduleInput').value;
+                const operator = document.getElementById('operatorInput').value;
+                const status = document.getElementById('statusFilter').value;
+
+                let url = '/api/v1/operation-log/list';
+                const params = new URLSearchParams();
+                if (module) params.append('module', module);
+                if (operator) params.append('userId', operator);
+                if (status) params.append('status', status);
+                params.append('page', page);
+                params.append('pageSize', pageSize);
+
+                if (module || operator || status) {
+                    url += '?' + params.toString();
+                }
+
+                const res = await fetch(url, { headers: authHeaders });
+                const data = await res.json();
+
+                if (data.code === 200) {
+                    renderTable(data.data || data);
+                } else {
+                    document.getElementById('logTable').innerHTML =
+                        '<tr><td colspan="10" style="text-align:center;">加载失败: ' + data.message + '</td></tr>';
+                }
+            } catch (e) {
+                console.error('加载失败:', e);
+                document.getElementById('logTable').innerHTML =
+                    '<tr><td colspan="10" style="text-align:center;">加载失败，请检查网络</td></tr>';
+            }
+        }
+
+        function renderTable(data) {
+            const logs = Array.isArray(data) ? data : (data.list || []);
+            const tbody = document.getElementById('logTable');
+
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="empty-tip">暂无操作日志</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => `
+                <tr>
+                    <td>${log.id || '-'}</td>
+                    <td>${log.module || '-'}</td>
+                    <td>${log.operationType || '-'}</td>
+                    <td>${log.operationDesc || '-'}</td>
+                    <td>${log.operatorId || '-'}</td>
+                    <td>${log.ipAddress || '-'}</td>
+                    <td>${log.requestMethod || '-'}</td>
+                    <td><span class="status-tag status-${log.status === 1 ? '1' : '0'}">${log.status === 1 ? '成功' : '失败'}</span></td>
+                    <td>${log.duration || '-'}</td>
+                    <td>${log.operationTime ? formatDateTime(log.operationTime) : '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function resetSearch() {
+            document.getElementById('moduleInput').value = '';
+            document.getElementById('operatorInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            loadLogs(1);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => loadLogs(1));
+    </script>
+</body>
+</html>
