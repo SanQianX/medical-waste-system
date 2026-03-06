@@ -70,6 +70,10 @@ public class PageController {
         // 数据统计
         pageTitles.put("statistics", "数据统计");
         contentTemplates.put("statistics", "statistics");
+
+        // 系统设置
+        pageTitles.put("system-settings", "系统设置");
+        contentTemplates.put("system-settings", "system-settings");
     }
 
     private void setPageModel(Model model, String page) {
@@ -215,6 +219,15 @@ public class PageController {
     public String operationLog(Model model) {
         setPageModel(model, "operation-log");
         return "operation-log/list";
+    }
+
+    /**
+     * 系统设置页面
+     */
+    @GetMapping("/page/system-settings")
+    public String systemSettings(Model model) {
+        setPageModel(model, "system-settings");
+        return "system-settings";
     }
 
     /**

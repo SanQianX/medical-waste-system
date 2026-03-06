@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置 - 医院废物管理系统</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; }
+        .header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .header-title { font-size: 20px; font-weight: 600; color: #2c3e50; }
+        .header-user { display: flex; align-items: center; gap: 15px; }
+        .btn { padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #2ecc71; color: white; }
+        .container { padding: 30px; max-width: 800px; margin: 0 auto; }
+        .section { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #555; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .form-group .hint { font-size: 12px; color: #999; margin-top: 5px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-card { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
+        .info-card .label { font-weight: 600; color: #666; margin-bottom: 5px; }
+        .info-card .value { color: #333; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">医院废物管理系统 - 系统设置</div>
+        <div class="header-user">
+            <a href="/page/dashboard" class="btn btn-primary">返回首页</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 基本信息 -->
+        <div class="section">
+            <div class="section-title">系统基本信息</div>
+            <div class="info-card">
+                <div class="label">系统名称</div>
+                <div class="value">医院医疗废物管理系统</div>
+            </div>
+            <div class="info-card">
+                <div class="label">版本号</div>
+                <div class="value">v1.0.0</div>
+            </div>
+            <div class="info-card">
+                <div class="label">系统状态</div>
+                <div class="value">运行中</div>
+            </div>
+        </div>
+
+        <!-- 预警设置 -->
+        <div class="section">
+            <div class="section-title">预警参数设置</div>
+            <div class="form-group">
+                <label>废物超时时限（小时）</label>
+                <input type="number" id="expireHours" value="24" min="1">
+                <div class="hint">超过此时间未转运的废物将触发预警</div>
+            </div>
+            <div class="form-group">
+                <label>仓库容量预警阈值（%）</label>
+                <input type="number" id="capacityThreshold" value="80" min="1" max="100">
+                <div class="hint">仓库容量超过此比例将触发预警</div>
+            </div>
+            <div class="form-group">
+                <label>转运超时时限（小时）</label>
+                <input type="number" id="transferHours" value="48" min="1">
+                <div class="hint">废物处于转运状态超过此时间将触发异常预警</div>
+            </div>
+            <button class="btn btn-success" onclick="saveSettings()">保存设置</button>
+        </div>
+
+        <!-- 数据管理 -->
+        <div class="section">
+            <div class="section-title">数据管理</div>
+            <div class="form-group">
+                <label>数据保留天数</label>
+                <input type="number" id="dataRetentionDays" value="365" min="30">
+                <div class="hint">超过此天数的日志数据将被自动清理</div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>自动备份</label>
+                    <select id="autoBackup">
+                        <option value="true">启用</option>
+                        <option value="false">禁用</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>备份频率</label>
+                    <select id="backupFrequency">
+                        <option value="daily">每天</option>
+                        <option value="weekly">每周</option>
+                        <option value="monthly">每月</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-success" onclick="saveDataSettings()">保存数据设置</button>
+        </div>
+
+        <!-- 关于 -->
+        <div class="section">
+            <div class="section-title">关于系统</div>
+            <div class="info-card">
+                <div class="label">开发框架</div>
+                <div class="value">Spring Boot 2.7 + MyBatis + Thymeleaf</div>
+            </div>
+            <div class="info-card">
+                <div class="label">前端技术</div>
+                <div class="value">HTML5 + JavaScript + ECharts</div>
+            </div>
+            <div class="info-card">
+                <div class="label">数据库</div>
+                <div class="value">MySQL 8.0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const authHeaders = {
+            'X-Token': localStorage.getItem('token') || '',
+            'X-User-Id': localStorage.getItem('userId') || ''
+        };
+
+        // 加载设置
+        async function loadSettings() {
+            // 从localStorage加载设置
+            const settings = JSON.parse(localStorage.getItem('systemSettings') || '{}');
+            if (settings.expireHours) document.getElementById('expireHours').value = settings.expireHours;
+            if (settings.capacityThreshold) document.getElementById('capacityThreshold').value = settings.capacityThreshold;
+            if (settings.transferHours) document.getElementById('transferHours').value = settings.transferHours;
+            if (settings.dataRetentionDays) document.getElementById('dataRetentionDays').value = settings.dataRetentionDays;
+            if (settings.autoBackup) document.getElementById('autoBackup').value = settings.autoBackup;
+            if (settings.backupFrequency) document.getElementById('backupFrequency').value = settings.backupFrequency;
+        }
+
+        // 保存预警设置
+        function saveSettings() {
+            const settings = {
+                expireHours: document.getElementById('expireHours').value,
+                capacityThreshold: document.getElementById('capacityThreshold').value,
+                transferHours: document.getElementById('transferHours').value
+            };
+            localStorage.setItem('systemSettings', JSON.stringify(settings));
+            alert('预警设置保存成功！');
+        }
+
+        // 保存数据设置
+        function saveDataSettings() {
+            const settings = JSON.parse(localStorage.getItem('systemSettings') || '{}');
+            settings.dataRetentionDays = document.getElementById('dataRetentionDays').value;
+            settings.autoBackup = document.getElementById('autoBackup').value;
+            settings.backupFrequency = document.getElementById('backupFrequency').value;
+            localStorage.setItem('systemSettings', JSON.stringify(settings));
+            alert('数据设置保存成功！');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadSettings);
+    </script>
+</body>
+</html>
